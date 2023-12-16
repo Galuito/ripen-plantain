@@ -25,5 +25,4 @@ Because I thought developing would have been done with my partner I started thor
 - Developing fuzzy search for movies and users
 
 ## This application does not
-- Handle series (Because my API does not handle series)
 - Handle sorting (This should be done in the frontend)
