@@ -23,6 +23,7 @@ Because I thought developing would have been done with my partner I started thor
 - Commenting posts and comments handling the fact that you can't comment something that is already a reply (Like in Youtube)
 - Getting the comments of a movie and the comments of a comment
 - Developing fuzzy search for movies and users
+- Handling Series (LAST MINUTE ADDITION, I DID NOT KNOW THAT THE MOVIE DB API WAS ABLE TO HANDLE SERIES ADDED IT IN A FEW MINUTES ^^)
 
 ## This application does not
 - Handle sorting (This should be done in the frontend)

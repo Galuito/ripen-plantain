@@ -12,13 +12,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addMovieById = exports.apiTester = exports.getMovieListFromAPI = void 0;
+exports.addSeriesById = exports.addMovieById = exports.apiTester = exports.getMovieListFromAPI = void 0;
 const axios_1 = __importDefault(require("axios"));
 const movie_1 = __importDefault(require("../models/movie"));
 const apiKey = '154759848d8b210d57070cde168eeef5';
 const baseURL = 'https://api.themoviedb.org/3';
 const searchMovies = '/search/movie';
 const getMovieById = '/movie/';
+const getSeriesById = '/tv/';
 // Get Movies from the API
 function fetchMovies(movieName) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -51,6 +52,20 @@ function fetchMovieById(movieId) {
         }
     });
 }
+function fetchSeriesById(seriesId) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const params = {
+            api_key: apiKey
+        };
+        try {
+            const response = yield axios_1.default.get(baseURL + getSeriesById + seriesId, { params });
+            return response.data;
+        }
+        catch (error) {
+            console.error('Error making TMDb API Request: ', error);
+        }
+    });
+}
 // Get Movies function for the routes
 const getMovieListFromAPI = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.body.movieName) {
@@ -62,10 +77,11 @@ const getMovieListFromAPI = (req, res) => __awaiter(void 0, void 0, void 0, func
 exports.getMovieListFromAPI = getMovieListFromAPI;
 // API Tester for development use
 const apiTester = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const movieName = "Bohemian Rhapsody";
-    const movieId = 24428;
+    // const movieId = 24428;
+    const seriesId = 40075;
     // const result = await fetchMovies(movieName);
-    const result = yield fetchMovieById(movieId);
+    // const result =  await fetchMovieById(movieId);
+    const result = yield fetchSeriesById(seriesId);
     return res.status(200).json(result);
 });
 exports.apiTester = apiTester;
@@ -109,4 +125,36 @@ const addMovieById = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     return res.status(201).json(newMovie);
 });
 exports.addMovieById = addMovieById;
-// ADD TRAILER TO A MOVIE BY ITS apiId or MongoDBId
+// ADD SERIES BY ID
+const addSeriesById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.body.seriesId) {
+        return res.status(400).json({ msg: 'Please. Provide with a series Id (seriesId)' });
+    }
+    // CHECK HERE IF THE SERIES WAS ALREADY ADDED BY ID
+    const existingSeries = yield movie_1.default.findOne({ apiId: req.body.seriesId });
+    if (existingSeries) {
+        return res.status(400).json({ msg: "The series is already in the database" });
+    }
+    const result = yield fetchSeriesById(req.body.seriesId);
+    console.log(result);
+    var rating = "PG";
+    if (result["adult"]) {
+        rating = "R";
+    }
+    const params = {
+        title: result["original_name"],
+        genre: result["genres"][0]["name"],
+        posterImage: result["poster_path"],
+        description: result["overview"],
+        rating: rating,
+        originalLanguage: result["original_language"],
+        releaseDate: result["first_air_date"],
+        duration: result["episode_run_time"][0],
+        isMovie: false,
+        apiId: result["id"]
+    };
+    const newMovie = new movie_1.default(params);
+    yield newMovie.save();
+    return res.status(201).json(newMovie);
+});
+exports.addSeriesById = addSeriesById;

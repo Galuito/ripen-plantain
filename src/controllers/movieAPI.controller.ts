@@ -8,6 +8,8 @@ const baseURL = 'https://api.themoviedb.org/3'
 const searchMovies = '/search/movie'
 const getMovieById = '/movie/'
 
+const getSeriesById = '/tv/'
+
 // Get Movies from the API
 async function fetchMovies(movieName: String) {
 
@@ -39,6 +41,19 @@ async function fetchMovieById(movieId: Number) {
   }
 }
 
+async function fetchSeriesById(seriesId: Number) {
+  const params = {
+    api_key: apiKey
+  }
+
+  try{
+    const response = await axios.get(baseURL + getSeriesById + seriesId, { params })
+    return response.data;
+  }catch(error){
+    console.error('Error making TMDb API Request: ', error)
+  }
+}
+
 // Get Movies function for the routes
 export const getMovieListFromAPI = async (req: Request, res: Response): Promise<Response> =>{
   if(!req.body.movieName){
@@ -50,10 +65,11 @@ export const getMovieListFromAPI = async (req: Request, res: Response): Promise<
 
 // API Tester for development use
 export const apiTester = async (req: Request, res: Response): Promise<Response> =>{
-  const movieName = "Bohemian Rhapsody";
-  const movieId = 24428;
+  // const movieId = 24428;
+  const seriesId = 40075;
   // const result = await fetchMovies(movieName);
-  const result =  await fetchMovieById(movieId);
+  // const result =  await fetchMovieById(movieId);
+  const result =  await fetchSeriesById(seriesId);
   return res.status(200).json( result );
 }
 
@@ -107,4 +123,42 @@ export const addMovieById = async (req: Request, res: Response): Promise<Respons
   return res.status(201).json(newMovie);
 }
 
-// ADD TRAILER TO A MOVIE BY ITS apiId or MongoDBId
+// ADD SERIES BY ID
+export const addSeriesById = async (req: Request, res: Response): Promise<Response> =>{
+  if(!req.body.seriesId){
+    return res.status(400).json({msg: 'Please. Provide with a series Id (seriesId)'});
+  }
+
+  // CHECK HERE IF THE SERIES WAS ALREADY ADDED BY ID
+  const existingSeries = await Movie.findOne({apiId:req.body.seriesId})
+  if(existingSeries){
+    return res.status(400).json({msg: "The series is already in the database"});
+  }
+
+  const result = await fetchSeriesById(req.body.seriesId);
+  console.log(result);
+
+  var rating = "PG";
+
+  if (result["adult"]){
+    rating = "R"
+  }
+
+  const params = {
+    title: result["original_name"],
+    genre: result["genres"][0]["name"],
+    posterImage: result["poster_path"],
+    description: result["overview"],
+    rating: rating,
+    originalLanguage: result["original_language"],
+    releaseDate: result["first_air_date"],
+    duration: result["episode_run_time"][0],
+    isMovie: false,
+    apiId: result["id"]
+  }
+
+  const newMovie = new Movie(params);
+  await newMovie.save();
+
+  return res.status(201).json(newMovie);
+}

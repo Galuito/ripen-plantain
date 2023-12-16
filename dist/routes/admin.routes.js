@@ -11,6 +11,7 @@ router.get('/apiTester', movieAPI_controller_1.apiTester);
 // - CREATE ROUTES
 router.post('/createCritic', user_controller_1.createCritic);
 router.post('/addMovieById', movieAPI_controller_1.addMovieById);
+router.post('/addSeriesById', movieAPI_controller_1.addSeriesById);
 // - MODIFY ROUTES
 router.put('/addTrailer', movie_controller_1.addTrailer);
 // - DELETE ROUTES
